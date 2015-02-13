@@ -1,6 +1,6 @@
 {
   "name": "fwatch",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Save file handles by watching diretories instead of files",
   "author": "Felix Gnass",
   "keywords": [
