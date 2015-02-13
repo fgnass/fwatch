@@ -1,11 +1,14 @@
-# fwatch
-
-Drop-in replacement for [filewatcher](https://www.npmjs.com/package/filewatcher)
-that watches parent [directories](https://www.npmjs.com/package/dirwatcher)
-instead of individual files in order to use less file handles.
-
 [![Build Status](https://travis-ci.org/fgnass/fwatch.png?branch=master)](https://travis-ci.org/fgnass/fwatch)
 
+Drop-in replacement for [filewatcher](https://www.npmjs.com/package/filewatcher)
+that watches directories instead of individual files in order to use less file handles.
+
+## About
+
+Watching files with Node.JS is still a mess. While
+[filewatcher](https://www.npmjs.com/package/filewatcher) addresses most of these issues, one problem still remains: OS X uses one file  handle for each `fs.watch()` call. Since the maximum number of file handles is quite low by default, you quickly run into `EMFILE` errors.
+
+To use less file handles, `fwatch` uses [dirwatcher](https://www.npmjs.com/package/dirwatcher) (which in turn uses filewatcher under the hood) to watches a file's directory instead.
 
 ### Usage
 
