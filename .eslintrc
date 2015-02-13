@@ -9,6 +9,7 @@
     "semi": "never",
     "no-use-before-define": "nofunc",
     "no-underscore-dangle": false,
+    "no-space-before-semi": false,
     "no-path-concat": false,
     "no-shadow": false,
     "curly": false,
