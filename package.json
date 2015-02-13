@@ -15,10 +15,10 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "node test"
+    "test": "ulimit -n 100 && ULIMIT=`ulimit -n` node test"
   },
   "dependencies": {
-    "dirwatcher": "^4.0.0"
+    "dirwatcher": "^4.1.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.2",

@@ -17,6 +17,14 @@ function createFile() {
   return n
 }
 
+function createDir() {
+  var d = dir + '/dir00' + (i++)
+  var f = d + '/file'
+  fs.mkdirSync(d)
+  fs.writeFileSync(f, Date.now())
+  return f
+}
+
 function touch(f) {
   setTimeout(function() { fs.writeFileSync(f, Date.now()) }, 1000)
 }
@@ -95,6 +103,39 @@ test('remove listener', { timeout: 4000 }, function(t) {
   w.add(f)
   touch(f)
 })
+
+if (process.platform != 'linux') {
+  test('fallback', { timeout: 10000 }, function(t) {
+    var ulimit = parseInt(process.env.ULIMIT)
+    if (!ulimit) {
+      console.log('Set the ULIMIT env var to `ulimit -n` to test the fallback')
+      return t.end()
+    }
+    if (ulimit > 4000) {
+      console.log('reduce ulimit < 4000 to test the polling fallback')
+      return t.end()
+    }
+
+    var files = new Array(ulimit).join().split(',').map(createDir)
+    var last = files[files.length-1]
+
+    w.on('fallback', function(limit) {
+      t.ok(limit > 0, 'fallback')
+      touch(last)
+    })
+    w.on('change', function(file) {
+      t.equal(file, last)
+      t.equivalent(w.list(), files)
+    })
+    w.on('error', function(err) {
+      t.fail(err)
+    })
+
+    t.plan(3)
+    console.log('creating %d dirs', ulimit)
+    files.forEach(w.add, w)
+  })
+}
 
 process.on('exit', function() {
   rimraf.sync(dir)

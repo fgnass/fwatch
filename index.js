@@ -11,14 +11,14 @@ module.exports = function() {
   return new FWatch()
 }
 
-function FWatch(opts) {
+function FWatch() {
   var self = this
 
   this.watchers = {}
   this.watched = {}
 
   this._watcherOpts = {
-    skip: function(d) {
+    skip: function() {
       return true
     },
     include: function(f) {
@@ -37,6 +37,7 @@ FWatch.prototype.add = function(file) {
   var self = this
   self.watched[file] = true
   fs.stat(file, function(err, stat) {
+    if (err) self.emit('error', err)
     var dir = stat.isFile() ? path.dirname(file) : file
     if (!self.watchers[dir]) {
       self.watchers[dir] = dirwatcher(dir, self._watcherOpts)
@@ -56,12 +57,41 @@ FWatch.prototype.add = function(file) {
       .on('removed', function(file) {
         self.emit('change', file, { deleted: true })
       })
-      //.on('fallback', function(limit) {
-      //  self.emit('fallback', limit)
-      //})
+      .on('error', function(err) {
+        if (err.code == 'EMFILE') self.poll()
+        else self.emit('error', err)
+      })
     }
   })
 }
+
+/**
+ * Whether the given file is being watched.
+ */
+FWatch.prototype.poll = function() {
+  var self = this
+  var files = this.list()
+  var dirs = Object.keys(this.watchers)
+
+  this.removeAll()
+
+  // re-add files to a polling filewatcher
+  var w = dirwatcher.filewatcher({ polling: true })
+  files.forEach(w.add, w)
+
+  ;['list', 'add', 'remove', 'removeAll'].forEach(function(m) {
+    self[m] = w[m].bind(w)
+  })
+
+  ;['change', 'error'].forEach(function(e) {
+    w.on(e, function() {
+      self.emit.apply(self, [e].concat([].slice.call(arguments)))
+    })
+  })
+
+  this.emit('fallback', dirs.length)
+}
+
 
 /**
  * Whether the given file is being watched.
